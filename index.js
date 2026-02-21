@@ -54,13 +54,13 @@ const server = app.listen(port, '0.0.0.0', () => {
     console.log(`📊 STATUS: http://localhost:${port}/status`);
     console.log(`🩺 HEALTH: http://localhost:${port}/health`);
     console.log("=".repeat(50) + "\n");
-
+    
     logger(`Server running on port ${port}`, "[ WEB ]");
 }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
         logger(`⚠️ Port ${port} is already in use!`, "[ ERROR ]");
         logger(`Trying alternative port ${port + 1}...`, "[ WEB ]");
-
+        
         // Try next port
         server.close();
         app.listen(port + 1, '0.0.0.0', () => {
@@ -125,26 +125,26 @@ function startBot(message) {
     // Handle process exit
     botProcess.on("close", (code, signal) => {
         const exitCode = code !== null ? code : signal;
-
+        
         if (exitCode !== 0 && global.countRestart < global.maxRestarts) {
             global.countRestart++;
-
+            
             console.log("\n" + "!".repeat(50));
             logger(`Bot exited with code ${exitCode}`, "[ EXIT ]");
             logger(`Restart attempt ${global.countRestart}/${global.maxRestarts}...`, "[ RESTART ]");
             console.log("!".repeat(50) + "\n");
-
+            
             // Wait before restarting
             setTimeout(() => {
                 startBot(`Restarting bot (${global.countRestart}/${global.maxRestarts})...`);
             }, global.restartDelay);
-
+            
         } else if (exitCode !== 0) {
             console.log("\n" + "!".repeat(50));
             logger(`Bot stopped after ${global.countRestart} restart attempts`, "[ STOPPED ]");
             logger("Maximum restart limit reached. Please check manually.", "[ ERROR ]");
             console.log("!".repeat(50) + "\n");
-
+            
         } else {
             console.log("\n" + "=".repeat(50));
             logger("Bot stopped normally", "[ STOPPED ]");
@@ -156,7 +156,7 @@ function startBot(message) {
     botProcess.on("error", (error) => {
         console.log("\n" + "!".repeat(50));
         logger(`Process error: ${error.message}`, "[ ERROR ]");
-
+        
         if (error.code === 'ENOENT') {
             logger("Node.js may not be installed or in PATH", "[ ERROR ]");
         }
@@ -186,32 +186,32 @@ function startBot(message) {
 async function checkForUpdates() {
     const GITHUB_REPO = "yourusername/arif-babu-bot"; // Change this to your repo
     const CURRENT_VERSION = require('./package.json').version;
-
+    
     try {
         console.log("\n" + "-".repeat(50));
         logger("Checking for updates...", "[ UPDATER ]");
-
+        
         const response = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
             timeout: 10000,
             headers: {
                 'User-Agent': 'ARIF-BABU-BOT'
             }
         });
-
+        
         const latestVersion = response.data.tag_name.replace('v', '');
-
+        
         if (latestVersion !== CURRENT_VERSION) {
             console.log("\n" + "📢 UPDATE AVAILABLE! 📢".yellow);
             console.log(`Current version: v${CURRENT_VERSION}`);
             console.log(`Latest version: v${latestVersion}`);
             console.log(`Download: ${response.data.html_url}`);
             console.log("-".repeat(50) + "\n");
-
+            
             logger(`Update available: v${CURRENT_VERSION} → v${latestVersion}`, "[ UPDATER ]");
         } else {
             logger(`Bot is up to date (v${CURRENT_VERSION})`, "[ UPDATER ]");
         }
-
+        
     } catch (error) {
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
             logger("Unable to check updates (no internet)", "[ UPDATER ]");
@@ -231,11 +231,11 @@ async function checkForUpdates() {
 function shutdown(signal) {
     console.log("\n" + "=".repeat(50));
     logger(`Received ${signal}. Shutting down...`, "[ SHUTDOWN ]");
-
+    
     if (global.botProcess && !global.botProcess.killed) {
         logger("Stopping bot process...", "[ SHUTDOWN ]");
         global.botProcess.kill('SIGTERM');
-
+        
         // Force kill after timeout
         setTimeout(() => {
             if (global.botProcess && !global.botProcess.killed) {
@@ -283,15 +283,15 @@ setInterval(() => {
         heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
         external: Math.round(memoryUsage.external / 1024 / 1024)
     };
-
+    
     // Log if memory usage is high
     if (memoryInMB.heapUsed > 400) {
         logger(`High memory usage: ${memoryInMB.heapUsed}MB`, "[ MEMORY ]");
     }
-
+    
     // Store in global for status endpoint
     global.memoryUsage = memoryInMB;
-
+    
 }, 60000); // Check every minute
 
 // ==================== END OF LAUNCHER ====================
